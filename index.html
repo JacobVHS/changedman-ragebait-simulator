@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Has Upu Changed?</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0a0a0a;
+  color: #fff;
+  font-family: 'Press Start 2P', monospace;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: filter 0.3s;
+}
+
+.screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  height: 100vh;
+  position: absolute;
+  top: 0; left: 0;
+  padding: 2rem;
+}
+.screen.active { display: flex; }
+
+/* ── Enter Splash ── */
+#splash h1 {
+  font-size: clamp(1rem, 4vw, 2rem);
+  margin-bottom: 2rem;
+  color: #555;
+}
+#splash button {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(0.7rem, 2.5vw, 1.2rem);
+  padding: 1.2rem 2.5rem;
+  background: transparent;
+  color: #fff;
+  border: 2px solid #fff;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+}
+#splash button:hover {
+  background: #fff;
+  color: #0a0a0a;
+  box-shadow: 0 0 20px rgba(255,255,255,0.4);
+}
+
+/* ── Question Screen ── */
+#question h1 {
+  font-size: clamp(1.2rem, 5vw, 2.5rem);
+  margin-bottom: 3rem;
+  animation: glitch 3s infinite;
+}
+
+.buttons {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.buttons button {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(0.7rem, 2vw, 1rem);
+  padding: 1rem 2.5rem;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+}
+#btn-yes {
+  color: #0f0;
+  border: 2px solid #0f0;
+}
+#btn-yes:hover {
+  background: #0f0;
+  color: #0a0a0a;
+  box-shadow: 0 0 25px rgba(0,255,0,0.5);
+}
+#btn-no {
+  color: #f00;
+  border: 2px solid #f00;
+}
+#btn-no:hover {
+  background: #f00;
+  color: #0a0a0a;
+  box-shadow: 0 0 25px rgba(255,0,0,0.5);
+}
+
+/* ── Try Again ── */
+#tryagain {
+  animation: shake 0.4s ease-in-out;
+}
+#tryagain h2 {
+  font-size: clamp(1rem, 4vw, 2rem);
+  color: #f44;
+}
+
+/* ── Finale ── */
+#finale {
+  background: #0a0a0a;
+  transition: background 4s ease;
+}
+#finale.sunset {
+  background: linear-gradient(180deg, #0a0a0a 0%, #1a0a2e 20%, #4a1942 40%, #c0392b 65%, #f39c12 85%, #f1c40f 100%);
+}
+
+.finale-text {
+  font-size: clamp(0.8rem, 3vw, 1.5rem);
+  opacity: 0;
+  transition: opacity 2s;
+  line-height: 2;
+}
+.finale-text.visible { opacity: 1; }
+
+.tribute-text {
+  font-size: clamp(0.5rem, 2vw, 0.9rem);
+  opacity: 0;
+  transition: opacity 3s;
+  color: #f1c40f;
+  margin-top: 1rem;
+  line-height: 2;
+}
+.tribute-text.visible { opacity: 1; }
+
+.finale-gifs {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+  opacity: 0;
+  transition: opacity 3s;
+}
+.finale-gifs.visible { opacity: 1; }
+.finale-gifs img {
+  width: clamp(140px, 30vw, 280px);
+  border-radius: 4px;
+  border: 2px solid rgba(255,255,255,0.15);
+}
+
+/* ── Road + Cars Scene ── */
+.road-scene {
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400px;
+  height: 300px;
+  opacity: 0;
+  transition: opacity 2s;
+}
+.road-scene.visible { opacity: 1; }
+
+.road {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 120px;
+  background: #555;
+}
+.road-left {
+  transform: translateX(-50%) rotate(-20deg);
+  transform-origin: bottom center;
+}
+.road-right {
+  transform: translateX(-50%) rotate(20deg);
+  transform-origin: bottom center;
+}
+.road-stem {
+  width: 4px;
+  height: 60px;
+  bottom: -60px;
+}
+
+/* Pixel cars via box-shadow */
+.car {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  image-rendering: pixelated;
+  transform: scale(3);
+}
+
+.car-left {
+  bottom: 100px;
+  left: calc(50% - 40px);
+  color: #222;
+  box-shadow:
+    /* body */
+    2px 0 0 #222, 3px 0 0 #222, 4px 0 0 #222, 5px 0 0 #222, 6px 0 0 #222, 7px 0 0 #222,
+    1px 1px 0 #333, 2px 1px 0 #333, 3px 1px 0 #333, 4px 1px 0 #333, 5px 1px 0 #333, 6px 1px 0 #333, 7px 1px 0 #333, 8px 1px 0 #333,
+    1px 2px 0 #222, 2px 2px 0 #222, 3px 2px 0 #44f, 4px 2px 0 #44f, 5px 2px 0 #44f, 6px 2px 0 #44f, 7px 2px 0 #222, 8px 2px 0 #222,
+    0px 3px 0 #333, 1px 3px 0 #333, 2px 3px 0 #333, 3px 3px 0 #333, 4px 3px 0 #333, 5px 3px 0 #333, 6px 3px 0 #333, 7px 3px 0 #333, 8px 3px 0 #333, 9px 3px 0 #333,
+    0px 4px 0 #111, 1px 4px 0 #555, 2px 4px 0 #111, 3px 4px 0 #111, 4px 4px 0 #111, 5px 4px 0 #111, 6px 4px 0 #111, 7px 4px 0 #555, 8px 4px 0 #111, 9px 4px 0 #111;
+  animation: drive-left 10s ease-in forwards;
+  animation-play-state: paused;
+}
+
+.car-right {
+  bottom: 100px;
+  right: calc(50% - 40px);
+  color: #eee;
+  box-shadow:
+    2px 0 0 #ddd, 3px 0 0 #ddd, 4px 0 0 #ddd, 5px 0 0 #ddd, 6px 0 0 #ddd, 7px 0 0 #ddd,
+    1px 1px 0 #eee, 2px 1px 0 #eee, 3px 1px 0 #eee, 4px 1px 0 #eee, 5px 1px 0 #eee, 6px 1px 0 #eee, 7px 1px 0 #eee, 8px 1px 0 #eee,
+    1px 2px 0 #ddd, 2px 2px 0 #ddd, 3px 2px 0 #88f, 4px 2px 0 #88f, 5px 2px 0 #88f, 6px 2px 0 #88f, 7px 2px 0 #ddd, 8px 2px 0 #ddd,
+    0px 3px 0 #eee, 1px 3px 0 #eee, 2px 3px 0 #eee, 3px 3px 0 #eee, 4px 3px 0 #eee, 5px 3px 0 #eee, 6px 3px 0 #eee, 7px 3px 0 #eee, 8px 3px 0 #eee, 9px 3px 0 #eee,
+    0px 4px 0 #111, 1px 4px 0 #999, 2px 4px 0 #111, 3px 4px 0 #ddd, 4px 4px 0 #ddd, 5px 4px 0 #ddd, 6px 4px 0 #ddd, 7px 4px 0 #999, 8px 4px 0 #111, 9px 4px 0 #111;
+  animation: drive-right 10s ease-in forwards;
+  animation-play-state: paused;
+}
+
+/* ── Keyframes ── */
+@keyframes glitch {
+  0%, 100% { text-shadow: 2px 0 #f00, -2px 0 #0ff; }
+  25% { text-shadow: -2px -1px #f00, 2px 1px #0ff; }
+  50% { text-shadow: 1px 2px #f00, -1px -2px #0ff; }
+  75% { text-shadow: -1px 1px #f00, 1px -1px #0ff; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10% { transform: translateX(-10px); }
+  20% { transform: translateX(10px); }
+  30% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  50% { transform: translateX(-5px); }
+  60% { transform: translateX(5px); }
+  70% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+@keyframes drive-left {
+  0% { transform: scale(3) translate(0, 0); opacity: 1; }
+  100% { transform: scale(1) translate(-140px, -120px); opacity: 0.15; }
+}
+
+@keyframes drive-right {
+  0% { transform: scale(3) translate(0, 0); opacity: 1; }
+  100% { transform: scale(1) translate(140px, -120px); opacity: 0.15; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- Screen 0: Splash -->
+<div id="splash" class="screen active">
+  <h1>...</h1>
+  <button onclick="enterApp()">Click to Begin</button>
+</div>
+
+<!-- Screen 1: Question -->
+<div id="question" class="screen">
+  <h1>Has Upu Changed?</h1>
+  <div class="buttons">
+    <button id="btn-yes" onclick="pressYes()">Yes</button>
+    <button id="btn-no" onclick="pressNo()">No</button>
+  </div>
+</div>
+
+<!-- Screen 2: Try Again -->
+<div id="tryagain" class="screen">
+  <h2 id="snark-text"></h2>
+</div>
+
+<!-- Screen 3: Finale -->
+<div id="finale" class="screen">
+  <p class="finale-text" id="finale-msg">So it's true... Upu has changed.</p>
+  <p class="tribute-text" id="tribute-msg">It's been a long day<br>without you, my friend</p>
+  <div class="finale-gifs" id="finale-gifs">
+    <img src="anothergif.gif" alt="">
+    <img src="goodbye.gif" alt="">
+  </div>
+  <div class="road-scene" id="road-scene">
+    <div class="road road-stem"></div>
+    <div class="road road-left"></div>
+    <div class="road road-right"></div>
+    <div class="car car-left" id="car-left"></div>
+    <div class="car car-right" id="car-right"></div>
+  </div>
+</div>
+
+<!-- Audio -->
+<audio id="audio-question" src="meet_lime_cookie.mp3" preload="auto" loop></audio>
+<audio id="audio-finale" src="see_you_again.mp3" preload="auto"></audio>
+
+<script>
+// ── Audio ──
+const questionAudio = document.getElementById('audio-question');
+const finaleAudio = document.getElementById('audio-finale');
+
+function playQuestionMusic() { questionAudio.play(); }
+function stopQuestionMusic() { questionAudio.pause(); }
+function playFinaleMusic() { finaleAudio.play(); }
+
+// ── State ──
+let noCount = 0;
+const snarkyMessages = [
+  "Think again...",
+  "Are you sure?",
+  "Come on now...",
+  "Just press Yes already",
+  "Wrong answer, try again",
+  "You know the truth...",
+  "Denial isn't just a river",
+  "Really? REALLY?",
+  "One more chance...",
+  "The correct answer is Yes"
+];
+
+// ── Screen Transitions ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function enterApp() {
+  playQuestionMusic();
+  showScreen('question');
+}
+
+function pressNo() {
+  noCount++;
+  const msg = snarkyMessages[(noCount - 1) % snarkyMessages.length];
+  document.getElementById('snark-text').textContent = msg;
+
+  // Progressive hue distortion
+  document.body.style.filter = `hue-rotate(${noCount * 30}deg)`;
+
+  showScreen('tryagain');
+
+  // Re-trigger shake animation
+  const ta = document.getElementById('tryagain');
+  ta.style.animation = 'none';
+  ta.offsetHeight; // force reflow
+  ta.style.animation = 'shake 0.4s ease-in-out';
+
+  setTimeout(() => {
+    document.body.style.filter = `hue-rotate(${noCount * 30}deg)`;
+    showScreen('question');
+  }, 1500);
+}
+
+function pressYes() {
+  // Reset filter
+  document.body.style.filter = 'none';
+
+  // Phase 1: Fade to black
+  showScreen('finale');
+
+  const finaleMsg = document.getElementById('finale-msg');
+  const tributeMsg = document.getElementById('tribute-msg');
+  const roadScene = document.getElementById('road-scene');
+  const carLeft = document.getElementById('car-left');
+  const carRight = document.getElementById('car-right');
+  const finale = document.getElementById('finale');
+
+  // Stop question music, start finale music
+  stopQuestionMusic();
+  playFinaleMusic();
+
+  // Phase 2: Text fades in (1-3s)
+  setTimeout(() => {
+    finaleMsg.classList.add('visible');
+  }, 1000);
+
+  // Phase 3: GIFs fade in (3.5s)
+  setTimeout(() => {
+    document.getElementById('finale-gifs').classList.add('visible');
+  }, 3500);
+
+  // Phase 4: Road scene appears (4s)
+  setTimeout(() => {
+    roadScene.classList.add('visible');
+  }, 4000);
+
+  // Phase 4: Cars start driving (4.5s)
+  setTimeout(() => {
+    carLeft.style.animationPlayState = 'running';
+    carRight.style.animationPlayState = 'running';
+  }, 4500);
+
+  // Phase 5: Sunset gradient (8s)
+  setTimeout(() => {
+    finale.classList.add('sunset');
+  }, 8000);
+
+  // Phase 6: Tribute text (8s)
+  setTimeout(() => {
+    tributeMsg.classList.add('visible');
+  }, 8000);
+}
+</script>
+</body>
+</html>
